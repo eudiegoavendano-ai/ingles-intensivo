@@ -460,9 +460,10 @@ function runWriting(day) {
 function immersionVideosHTML(plan) {
   const L = (window.VIDEOS || {})[plan.week] || [], vd = videoOfDay(plan.week, plan.dw);
   if (!vd) return `<div class="card" style="font-size:17px">${esc(plan.missions.find(x => x.id === "immersion").desc)}</div>`;
-  const tip = vd.rewatch
-    ? "Segunda vuelta: miralo sin subtitulos primero; luego con subtitulos en INGLES. Pausa y repite (shadowing) 10 frases."
-    : "Miralo con subtitulos en INGLES. Pausa cada vez que escuches algo de la clase de hoy y repitelo en voz alta.";
+  const R = readingFor(plan.week, plan.dw);
+  const tip = plan.dw === 1 ? "Clase de la gramatica de esta semana. Miralo con subtitulos en INGLES y pausa para repetir los ejemplos en voz alta."
+    : plan.dw >= 7 ? "Repaso de escucha de la semana: miralo primero SIN subtitulos y anota cuanto entiendes; despues con subtitulos en INGLES."
+    : `Video elegido para el tema de hoy (lectura: "${esc(R.titulo)}"). Miralo con subtitulos en INGLES y anota 5 expresiones nuevas.`;
   const link = (v, big) => `<a class="card vid${big ? " big" : ""}" href="${ytUrl(v.id)}" target="_blank" rel="noopener">
       <span class="pill ${big ? "g" : "b"}">${esc(v.k)} - ${v.min} min</span>
       <b>${esc(v.t)}</b><small>${esc(v.ch)} - YouTube</small></a>`;
@@ -470,7 +471,7 @@ function immersionVideosHTML(plan) {
   return `<h2>Clase del dia (semana ${plan.week}: ${esc(plan.W.tema)})</h2>
     ${link(vd.v, true)}
     <div class="note">${tip}</div>
-    <h2>Todas las clases de esta semana</h2>
+    <h2>Mas clases de esta semana</h2>
     <div class="grid g2">${L.map((v, i) => i === vd.idx ? "" : link(v, false)).join("")}</div>
     <p class="mute" style="font-size:13px;margin-top:10px">Quieres mas? <a href="${ytSearch(g + " english lesson")}" target="_blank" rel="noopener">Buscar mas clases de "${esc(g)}" en YouTube</a>.</p>
     <p class="mute" style="font-size:13px">Idea extra: ${esc(plan.W.inmersion)}</p>`;

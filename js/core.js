@@ -177,11 +177,14 @@ function dailyWritingPrompt(day) {
 }
 // Video del dia: cada semana tiene 4 clases (0 gramatica, 1 gramatica en espanol o complementaria, 2 vocabulario, 3 escucha)
 const VIDEO_ORDER = [0, 2, 3, 1, 2, 3, 0];
+// Dia 1: clase de gramatica de la semana. Dias 2 a 7: un video propio del dia (data/videos_dia.js), ligado a la lectura o al repaso
 function videoOfDay(week, dw) {
   const L = (window.VIDEOS || {})[week] || [];
+  const D = ((window.VIDEOS_DIA || {})[week] || [])[dw - 2];
+  if (dw >= 2 && D) return {v: D, idx: -1, rewatch: false, daily: true};
   if (!L.length) return null;
-  const i = VIDEO_ORDER[(dw - 1) % 7];
-  return {v: L[i] || L[0], idx: i, rewatch: dw >= 5};
+  const i = dw === 1 ? 0 : VIDEO_ORDER[(dw - 1) % 7];
+  return {v: L[i] || L[0], idx: i, rewatch: false};
 }
 const ytUrl = id => "https://www.youtube.com/watch?v=" + encodeURIComponent(id);
 const ytSearch = q => "https://www.youtube.com/results?search_query=" + encodeURIComponent(q);
