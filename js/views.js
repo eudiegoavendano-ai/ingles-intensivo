@@ -159,6 +159,7 @@ VIEWS.ajustes = () => {
     <div class="card" style="margin-top:14px"><h3>Respaldo</h3><p class="mute" style="font-size:13px">${WEB ? "Tu progreso se guarda en este dispositivo. Para pasarlo a otro (PC o celular) usa Copiar codigo de progreso y pegalo alla. Agrega esta pagina a la pantalla de inicio para que el iPhone no borre los datos." : CLOUD ? (DB ? "Tu progreso se guarda en la nube de claude.ai y se sincroniza entre el PC y el celular. Abre siempre el mismo link." : "No hay conexion con la nube: el progreso se guarda solo en este dispositivo.") : "El progreso se guarda automaticamente en <code>Documents\\InglesIntensivo\\data\\progreso.json</code>, con copia diaria en <code>data\\respaldos</code>."}</p>
       <div class="row"><button class="btn" id="ex">v Exportar progreso</button><label class="btn">^ Importar<input type="file" id="im" accept=".json" style="display:none"></label><div class="spacer"></div><button class="btn danger" id="rs">Reiniciar todo</button></div>
       <div class="row" id="rsBox" hidden style="margin-top:12px"><span>Esto borra TODO tu progreso. Escribe <b>BORRAR</b>:</span><input class="txt" id="rsTxt" style="width:140px"><button class="btn danger" id="rsOk">Confirmar</button></div>
+      ${WEB ? `<h3 style="margin-top:16px">Sincronizacion automatica (PC y celular)</h3><div id="syncBox"></div>` : ""}
       <h3 style="margin-top:16px">Pasar progreso a otro dispositivo</h3>
       <div class="row"><button class="btn" id="cpShow">Copiar codigo de progreso</button><button class="btn" id="cpLoad">Pegar codigo de progreso</button></div>
       <textarea class="txt" id="cpTxt" hidden style="min-height:120px;margin-top:8px;font-size:12px"></textarea>
@@ -185,6 +186,7 @@ VIEWS.ajustes = () => {
     const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([data], {type: "application/json"})); a.download = filename; a.click();
   };
   $("#im").onchange = async e => { try { const d = JSON.parse(await e.target.files[0].text()); if (!d.version) throw 0; S = Object.assign(DEFAULT_STATE(), d); save(); toast("Progreso importado"); go("hoy"); } catch (err) { toast("Archivo invalido"); } };
+  if (WEB) renderSync();
   $("#cpShow").onclick = () => {
     const t = $("#cpTxt"), code = JSON.stringify(S);
     t.hidden = false; $("#cpBox").hidden = true; t.value = code; t.focus(); t.select();
@@ -200,6 +202,49 @@ VIEWS.ajustes = () => {
   $("#rs").onclick = () => { $("#rsBox").hidden = false; $("#rsTxt").focus(); };
   $("#rsOk").onclick = () => { if ($("#rsTxt").value.trim() === "BORRAR") { S = DEFAULT_STATE(); save(); go("hoy"); toast("Progreso reiniciado"); } else toast("Escribe BORRAR para confirmar"); };
 };
+
+// ---------- Sincronizacion automatica (version web) ----------
+const TOKEN_URL = "https://github.com/settings/tokens/new?scopes=gist&description=Ingles%20Intensivo%20sync";
+const summary = st => `dia ${st.currentDay || 1}, ${st.xp || 0} XP, ${Object.keys(st.cards || {}).length} palabras`;
+function renderSync(msg) {
+  const box = $("#syncBox"); if (!box) return;
+  if (SYNC.enabled()) {
+    box.innerHTML = `<p style="font-size:14px">Conectada a GitHub (<b>${esc(SYNC.user())}</b>). Tu avance se sube solo al terminar cada mision y se baja al abrir la app.</p>
+      <div class="row"><button class="btn" id="syNow">Sincronizar ahora</button><div class="spacer"></div><button class="btn danger" id="syOff">Desconectar este dispositivo</button></div>${msg ? `<div class="note">${msg}</div>` : ""}`;
+    $("#syNow").onclick = async () => {
+      try { if (await SYNC.pull()) { refreshSide(); toast("Progreso actualizado desde la nube"); go("ajustes"); } else { await SYNC.push(); toast("Progreso subido a la nube"); } }
+      catch (e) { toast("No se pudo sincronizar: revisa tu conexion"); }
+    };
+    $("#syOff").onclick = () => { SYNC.disconnect(); renderSync("Desconectado. El avance queda guardado en este dispositivo."); };
+    return;
+  }
+  box.innerHTML = `<p class="mute" style="font-size:13px">Guarda tu avance en tu cuenta de GitHub y lo mantiene igual en el PC y el celular. Se configura una vez en cada dispositivo:</p>
+    <ol style="font-size:14px;margin:6px 0 10px 18px;padding:0">
+      <li>Crea una llave en GitHub: <a href="${TOKEN_URL}" target="_blank" rel="noopener">abrir pagina de GitHub</a>. Ya viene marcado solo el permiso <b>gist</b>; en "Expiration" elige "No expiration" y presiona <b>Generate token</b>.</li>
+      <li>Copia la llave (empieza con <code>ghp_</code>) y pegala aqui. Usa la misma llave en el PC y en el celular.</li></ol>
+    <div class="row"><input class="txt" id="syTok" type="password" autocomplete="off" placeholder="ghp_..." style="flex:1;min-width:180px"><button class="btn primary" id="syGo">Conectar</button></div>
+    ${msg ? `<div class="note">${msg}</div>` : ""}`;
+  $("#syGo").onclick = async () => {
+    const tok = $("#syTok").value.trim();
+    if (!/^(ghp_|github_pat_|gho_)\w+/.test(tok)) return toast("Pega la llave completa (empieza con ghp_)");
+    $("#syGo").disabled = true; $("#syGo").textContent = "Conectando...";
+    try {
+      const r = await SYNC.connect(tok);
+      if (r.created) return renderSync("Listo: tu avance (" + summary(S) + ") quedo guardado en la nube. Ahora conecta el otro dispositivo con la misma llave.");
+      const remote = r.remote;
+      if (!remote || !remote.version) { await SYNC.push(); return renderSync("Listo: conectado."); }
+      // Ya habia progreso en la nube: el usuario elige cual conservar
+      $("#syncBox").innerHTML = `<div class="note">Ya hay un avance guardado en la nube. Cual quieres conservar?</div>
+        <div class="grid g2"><button class="btn primary" id="syR">Usar el de la nube<br><small>${esc(summary(remote))}</small></button>
+        <button class="btn" id="syL">Usar el de este dispositivo<br><small>${esc(summary(S))}</small></button></div>`;
+      $("#syR").onclick = () => { applyState(remote); try { localStorage.setItem("ingles_state", JSON.stringify(S)); } catch (e) {} refreshSide(); toast("Avance de la nube cargado"); go("ajustes"); renderSync("Conectado. Este dispositivo ahora tiene el avance de la nube."); };
+      $("#syL").onclick = async () => { S.updatedAt = Date.now(); await SYNC.push(); renderSync("Conectado. La nube ahora tiene el avance de este dispositivo."); };
+    } catch (e) {
+      SYNC.disconnect();
+      renderSync(e && e.status === 401 ? "La llave no funciona. Revisa que la copiaste completa y que tiene el permiso gist." : "No se pudo conectar. Revisa tu conexion a internet.");
+    }
+  };
+}
 
 // ---------- Arranque ----------
 $$("#nav a").forEach(a => a.onclick = () => go(a.dataset.view));

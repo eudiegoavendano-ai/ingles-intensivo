@@ -255,6 +255,7 @@ async function loadState() {
   if (!data || !data.version) { try { data = JSON.parse(localStorage.getItem("ingles_state") || "null"); } catch (e) {} }
   if ((!data || !data.version) && WEB && window.SEED_STATE) data = window.SEED_STATE;
   if (data && data.version) applyState(data);
+  if (WEB && typeof SYNC !== "undefined") await SYNC.pullOnStart();
 }
 function setSaveLabel(t, cls = "") { const el = $("#saveState"); if (el) { el.textContent = "*  " + t; el.className = "save-state " + cls; } }
 async function flushCloud() {
@@ -281,9 +282,10 @@ function save() {
   setSaveLabel("guardando...", "saving");
   clearTimeout(saveTimer);
   saveTimer = setTimeout(async () => {
+    if (WEB) S.updatedAt = Date.now();
     const body = JSON.stringify(S);
     try { localStorage.setItem("ingles_state", body); } catch (e) {}
-    if (WEB) { let ok = true; try { localStorage.setItem("ingles_state", body); } catch (e) { ok = false; } return ok ? setSaveLabel("guardado en este dispositivo") : setSaveLabel("no se pudo guardar", "err"); }
+    if (WEB) { let ok = true; try { localStorage.setItem("ingles_state", body); } catch (e) { ok = false; } if (!ok) return setSaveLabel("no se pudo guardar", "err"); if (typeof SYNC !== "undefined" && SYNC.enabled()) return SYNC.pushSoon(); return setSaveLabel("guardado en este dispositivo"); }
     if (CLOUD) { if (DB) return flushCloud(); return setSaveLabel("sin nube (solo este dispositivo)", "err"); }
     try {
       const r = await fetch("/api/state", {method: "POST", headers: {"Content-Type": "application/json"}, body});
