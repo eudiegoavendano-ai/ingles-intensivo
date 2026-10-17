@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Ingles Intensivo</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Ingles">
+<meta name="theme-color" content="#0b0f14">
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="manifest" href="manifest.json">
+</head>
+<body>
+<meta name="format-detection" content="telephone=no">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%2322c55e'/><text x='32' y='44' font-size='30' font-family='Segoe UI' font-weight='800' text-anchor='middle' fill='white'>EN</text></svg>">
+<link rel="stylesheet" href="styles.css?v=5">
+<div id="app">
+  <aside id="sidebar">
+    <div class="brand"><div class="logo">EN</div><div><b>Ingles Intensivo</b><small>0 -> 100 en 182 dias</small></div></div>
+    <nav id="nav">
+      <a data-view="hoy" class="active"><span>o</span>Mision de hoy</a>
+      <a data-view="repaso"><span>R</span>Repaso SRS <em id="dueBadge"></em></a>
+      <a data-view="plan"><span>#</span>Plan 26 semanas</a>
+      <a data-view="gramatica"><span>S</span>Gramatica</a>
+      <a data-view="diccionario"><span>Aa</span>Diccionario</a>
+      <a data-view="diario"><span>/</span>Mi diario</a>
+      <a data-view="progreso"><span>^</span>Progreso</a>
+      <a data-view="ajustes"><span>*</span>Ajustes</a>
+    </nav>
+    <div class="side-stats">
+      <div><b id="sStreak">0</b><small>racha </small></div>
+      <div><b id="sXp">0</b><small>XP</small></div>
+      <div><b id="sWords">0</b><small>palabras</small></div>
+    </div>
+    <div class="save-state" id="saveState">*  guardado</div>
+  </aside>
+  <main id="main"></main>
+</div>
+<div id="toast"></div>
+<div id="loading">Cargando Ingles Intensivo...</div>
+<script>
+// Si algo falla (por ejemplo en Safari de iOS), mostrar el error en pantalla en vez de quedar en blanco
+function showFatal(e) {
+  var d = document.getElementById("fatal");
+  if (!d) { d = document.createElement("div"); d.id = "fatal"; document.body.appendChild(d); }
+  d.textContent = "Error: " + (e && (e.message || e.reason || e)) + " - Toma captura y enviasela a Claude.";
+  var l = document.getElementById("loading"); if (l) l.remove();
+}
+window.addEventListener("error", function (ev) { showFatal(ev.error || ev.message); });
+</script>
+<script src="data/vocab_a.js?v=5" charset="utf-8"></script>
+<script src="data/vocab_b.js?v=5" charset="utf-8"></script>
+<script src="data/vocab_c.js?v=5" charset="utf-8"></script>
+<script src="data/grammar_a.js?v=5" charset="utf-8"></script>
+<script src="data/grammar_b.js?v=5" charset="utf-8"></script>
+<script src="data/curriculum.js?v=5" charset="utf-8"></script>
+<script src="data/videos.js?v=5" charset="utf-8"></script>
+<script src="data/inicio.js" charset="utf-8"></script>
+<script src="js/core.js?v=5" charset="utf-8"></script>
+<script src="js/missions.js?v=5" charset="utf-8"></script>
+<script src="js/views.js?v=5" charset="utf-8"></script>
+
+</body>
+</html>
