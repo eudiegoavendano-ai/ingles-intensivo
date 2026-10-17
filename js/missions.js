@@ -125,6 +125,25 @@ function runItems(items, opts) {
 }
 
 // ---------- Construccion de items ----------
+// Convierte un ejercicio compacto de GRAMMAR_EXTRA al formato de runItems
+function extraItem(e, rand) {
+  if (e[0] === "m") { const o = e[2].split("|"), order = shuffle(o.map((_, i) => i), rand); return {t: "mc", q: e[1], o: order.map(i => o[i]), a: order.indexOf(e[3])}; }
+  if (e[0] === "f") return {t: "fill", q: e[1], a: e[2].split("|")};
+  if (e[0] === "o") return {t: "order", a: e[1]};
+  return {t: "tr", q: e[1], a: e[2].split("|")};
+}
+// Dias de practica (2 a 6): 6 ejercicios nuevos distintos cada dia + 2 de la leccion + 2 de repaso de unidades anteriores.
+// Si repite el intento, los 6 nuevos se sacan al azar del banco completo.
+function practiceItems(week, dw, rand, tries) {
+  const bank = (window.GRAMMAR_EXTRA || {})[week] || [];
+  if (!bank.length) return grammarItems(week, 8, rand, 2);
+  const fixed = shuffle(bank, rng(week * 991)); // mismo orden siempre: cada dia toma su parte sin repetir
+  const per = Math.ceil(bank.length / 5);
+  const picked = tries ? sample(bank, per, rand) : fixed.slice((dw - 2) * per, (dw - 1) * per);
+  const items = picked.map(e => ({...extraItem(e, rand), label: "Unidad " + week}));
+  items.push(...grammarItems(week, 2, rand, 2));
+  return shuffle(items, rand);
+}
 function grammarItems(week, n, rand, spiral = 0) {
   const unit = GRAMMAR[week].ejercicios.map(x => ({...x, label: "Unidad " + week}));
   let items = n >= unit.length ? shuffle(unit, rand) : sample(unit, n, rand);
@@ -234,7 +253,7 @@ const MISSIONS = {
     const week = weekOf(day), dw = dowOf(day), back = backToDay(day), G = GRAMMAR[week];
     const start = () => {
       const rand = rng(day * 17 + (S.days[day]?.gTries || 0));
-      const items = dw === 1 ? grammarItems(week, 99, rand) : grammarItems(week, 8, rand, 2);
+      const items = dw === 1 ? grammarItems(week, 99, rand) : practiceItems(week, dw, rand, S.days[day]?.gTries || 0);
       runItems(items, {title: G.titulo, onBack: back,
         onAnswer: (it, ok) => { S.stats.gramTotal++; if (ok) S.stats.gramOk++; },
         onFinish: score => {
