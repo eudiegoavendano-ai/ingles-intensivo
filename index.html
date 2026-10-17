@@ -15,7 +15,7 @@
 <body>
 <meta name="format-detection" content="telephone=no">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%2322c55e'/><text x='32' y='44' font-size='30' font-family='Segoe UI' font-weight='800' text-anchor='middle' fill='white'>EN</text></svg>">
-<link rel="stylesheet" href="styles.css?v=9">
+<link rel="stylesheet" href="styles.css?v=10">
 <div id="app">
   <aside id="sidebar">
     <div class="brand"><div class="logo">EN</div><div><b>Ingles Intensivo</b><small>0 -> 100 en 182 dias</small></div></div>
@@ -24,6 +24,7 @@
       <a data-view="repaso"><span>R</span>Repaso SRS <em id="dueBadge"></em></a>
       <a data-view="plan"><span>#</span>Plan 26 semanas</a>
       <a data-view="gramatica"><span>S</span>Gramatica</a>
+      <a data-view="practica"><span>+</span>Practica libre</a>
       <a data-view="diccionario"><span>Aa</span>Diccionario</a>
       <a data-view="diario"><span>/</span>Mi diario</a>
       <a data-view="progreso"><span>^</span>Progreso</a>
@@ -50,32 +51,34 @@ function showFatal(e) {
 }
 window.addEventListener("error", function (ev) { showFatal(ev.error || ev.message); });
 </script>
-<script src="data/vocab_a.js?v=9" charset="utf-8"></script>
-<script src="data/vocab_b.js?v=9" charset="utf-8"></script>
-<script src="data/vocab_c.js?v=9" charset="utf-8"></script>
-<script src="data/grammar_a.js?v=9" charset="utf-8"></script>
-<script src="data/grammar_b.js?v=9" charset="utf-8"></script>
-<script src="data/grammar_extra_1.js?v=9" charset="utf-8"></script>
-<script src="data/grammar_extra_2.js?v=9" charset="utf-8"></script>
-<script src="data/grammar_extra_3.js?v=9" charset="utf-8"></script>
-<script src="data/grammar_more_1.js?v=9" charset="utf-8"></script>
-<script src="data/grammar_more_2.js?v=9" charset="utf-8"></script>
-<script src="data/grammar_more_3.js?v=9" charset="utf-8"></script>
-<script src="data/grammar_more_4.js?v=9" charset="utf-8"></script>
-<script src="data/grammar_more_5.js?v=9" charset="utf-8"></script>
-<script src="data/grammar_more_6.js?v=9" charset="utf-8"></script>
-<script src="data/curriculum.js?v=9" charset="utf-8"></script>
-<script src="data/videos.js?v=9" charset="utf-8"></script>
-<script src="data/lecturas_1.js?v=9" charset="utf-8"></script>
-<script src="data/lecturas_2.js?v=9" charset="utf-8"></script>
-<script src="data/lecturas_3.js?v=9" charset="utf-8"></script>
-<script src="data/lecturas_4.js?v=9" charset="utf-8"></script>
-<script src="data/lecturas_5.js?v=9" charset="utf-8"></script>
+<script src="data/vocab_a.js?v=10" charset="utf-8"></script>
+<script src="data/vocab_b.js?v=10" charset="utf-8"></script>
+<script src="data/vocab_c.js?v=10" charset="utf-8"></script>
+<script src="data/grammar_a.js?v=10" charset="utf-8"></script>
+<script src="data/grammar_b.js?v=10" charset="utf-8"></script>
+<script src="data/grammar_extra_1.js?v=10" charset="utf-8"></script>
+<script src="data/grammar_extra_2.js?v=10" charset="utf-8"></script>
+<script src="data/grammar_extra_3.js?v=10" charset="utf-8"></script>
+<script src="data/grammar_more_1.js?v=10" charset="utf-8"></script>
+<script src="data/grammar_more_2.js?v=10" charset="utf-8"></script>
+<script src="data/grammar_more_3.js?v=10" charset="utf-8"></script>
+<script src="data/grammar_more_4.js?v=10" charset="utf-8"></script>
+<script src="data/grammar_more_5.js?v=10" charset="utf-8"></script>
+<script src="data/grammar_more_6.js?v=10" charset="utf-8"></script>
+<script src="data/curriculum.js?v=10" charset="utf-8"></script>
+<script src="data/videos.js?v=10" charset="utf-8"></script>
+<script src="data/lecturas_1.js?v=10" charset="utf-8"></script>
+<script src="data/lecturas_2.js?v=10" charset="utf-8"></script>
+<script src="data/lecturas_3.js?v=10" charset="utf-8"></script>
+<script src="data/lecturas_4.js?v=10" charset="utf-8"></script>
+<script src="data/lecturas_5.js?v=10" charset="utf-8"></script>
+<script src="data/pronunciacion.js?v=10" charset="utf-8"></script>
 <script src="data/inicio.js" charset="utf-8"></script>
-<script src="js/core.js?v=9" charset="utf-8"></script>
-<script src="js/sync.js?v=9" charset="utf-8"></script>
-<script src="js/missions.js?v=9" charset="utf-8"></script>
-<script src="js/views.js?v=9" charset="utf-8"></script>
+<script src="js/core.js?v=10" charset="utf-8"></script>
+<script src="js/sync.js?v=10" charset="utf-8"></script>
+<script src="js/missions.js?v=10" charset="utf-8"></script>
+<script src="js/views.js?v=10" charset="utf-8"></script>
+<script src="js/practica.js?v=10" charset="utf-8"></script>
 
 </body>
 </html>

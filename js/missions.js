@@ -11,7 +11,7 @@ function topbar(title, pct, onBack) {
 }
 function bindBack(onBack) { const b = $("#backBtn"); if (b) b.onclick = () => { stopSpeech(); KEY = null; onBack(); }; }
 function audioBtns(text, cls = "") {
-  return `<button class="audio ${cls}" data-say="${esc(text)}" title="Escuchar">></button><button class="audio slow ${cls}" data-say="${esc(text)}" data-slow="1" title="Lento"></button>`;
+  return `<button class="audio ${cls}" data-say="${esc(text)}" title="Escuchar">></button><button class="audio slow ${cls}" data-say="${esc(text)}" data-slow="1" title="Lento">lento</button>`;
 }
 function bindAudio(root = document) {
   $$("[data-say]", root).forEach(b => b.onclick = e => { e.stopPropagation(); speak(b.dataset.say, b.dataset.slow ? 0.6 : S.settings.rate); });
@@ -257,7 +257,7 @@ const MISSIONS = {
     const quiz = () => {
       const rand = rng(day * 31), pool = poolAround(week);
       const items = [];
-      list.forEach((e, k) => items.push(k % 3 === 2 ? vocabListen(e, pool, rand) : vocabMC(e, pool, rand, k % 3 === 1)));
+      list.forEach((e, k) => items.push(...vocabExercises(e, pool, rand, k))); // 2 ejercicios por palabra: reconocer + producir
       runItems(shuffle(items, rand), {title: "Fijacion de vocabulario", requeue: true, onBack: back,
         onFinish: score => { addCards(list); completeMission(day, "vocab", {score}); refreshSide(); finishScreen("Vocabulario aprendido OK", `<p>${list.length} palabras anadidas a tu repaso espaciado.</p><p class="mute">Precision al primer intento: ${score}%</p>`, back); }});
     };
@@ -282,10 +282,7 @@ const MISSIONS = {
 
   listening(day) {
     const back = backToDay(day), rand = rng(day * 7);
-    const today = wordsForDay(day).map(e => e.ex).filter(Boolean);
-    const prev = Object.keys(S.cards).map(id => CONTENT.byId[id]?.ex).filter(Boolean);
-    let sents = sample(today, 5, rand); sents.push(...sample(prev.filter(s => !sents.includes(s)), 8 - sents.length, rand));
-    if (sents.length < 8) sents.push(...sample(splitSentences(readingFor(weekOf(day), dowOf(day)).texto).filter(s => s.split(" ").length < 16), 8 - sents.length, rand));
+    const sents = dictationFor(day, rand); // 10 frases: vocabulario del dia, lectura del dia, banco de la semana y repaso
     runItems(sents.map(s => ({t: "dict", s})), {title: "Dictado", onBack: back,
       onAnswer: (it, ok, x) => { S.stats.dictTotal++; S.stats.dictOk += (x.score || 0) / 100; },
       onFinish: score => { completeMission(day, "listening", {score}); finishScreen(`Dictado: ${score}%`, `<p>${score >= 85 ? "Excelente oido!" : "Repite manana las frases dificiles con el boton ."}</p>`, back); }});
@@ -293,9 +290,8 @@ const MISSIONS = {
 
   speaking(day) {
     const back = backToDay(day), rand = rng(day * 11), week = weekOf(day);
-    const ex = sample(wordsForDay(day).map(e => e.ex).filter(Boolean), 3, rand);
-    const rd = sample(splitSentences(readingFor(week, dowOf(day)).texto).filter(s => s.split(" ").length <= 18), 3, rand);
-    runSpeaking([...ex, ...rd], back, avg => { completeMission(day, "speaking", {score: avg}); finishScreen(`Pronunciacion: ${avg}%`, `<p class="mute">Consejo: imita el ritmo y la entonacion, no solo los sonidos. Las palabras importantes se acentuan; las pequenas (a, the, to, of) se reducen.</p>`, back); });
+    const {snd, sents} = speakingFor(day, rand);
+    soundIntro(snd, back, () => runSpeaking(sents, back, avg => { completeMission(day, "speaking", {score: avg}); finishScreen(`Pronunciacion: ${avg}%`, `<p class="mute">Consejo: imita el ritmo y la entonacion, no solo los sonidos. Las palabras importantes se acentuan; las pequenas (a, the, to, of) se reducen.</p>`, back); }), "Practicar 8 frases");
   },
 
   reading(day) {

@@ -151,17 +151,17 @@ function dayPlan(day) {
     const nw = wordsForDay(day).length;
     m.push({id: "vocab", ic: "*", titulo: `Vocabulario nuevo (${nw})`, desc: "Aprende las palabras del dia en contexto + mini-quiz.", xp: 30});
     m.push({id: "grammar", ic: "S", titulo: dw === 1 ? `Leccion: ${GRAMMAR[week].titulo}` : `Practica: ${GRAMMAR[week].titulo}`, desc: dw === 1 ? "Lee la leccion y haz los ejercicios (>=70%)." : "Ejercicios de la unidad + repaso de unidades anteriores (>=70%).", xp: 30});
-    m.push({id: "listening", ic: "", titulo: "Dictado", desc: "Escucha 8 frases y escribelas exactamente.", xp: 25});
-    m.push({id: "speaking", ic: "", titulo: "Pronunciacion y shadowing", desc: "Escucha, repite en voz alta y mide tu pronunciacion.", xp: 25});
+    m.push({id: "listening", ic: "D", titulo: "Dictado", desc: "Escucha 10 frases y escribelas exactamente.", xp: 25});
+    m.push({id: "speaking", ic: "P", titulo: "Pronunciacion y shadowing", desc: "Sonido dificil del dia + 8 frases para escuchar y repetir.", xp: 25});
     const R = readingFor(week, dw), listenFirst = dw === 4 || dw === 6;
-    m.push({id: "reading", ic: "", titulo: `Lectura: ${R.titulo}`, desc: listenFirst ? "Texto nuevo en modo escucha: primero escuchalo sin leer, luego leelo y responde." : "Texto nuevo: lee con audio, toca palabras para traducir y responde.", xp: 25, readingWeek: week, readingDw: dw, listenFirst});
+    m.push({id: "reading", ic: "L", titulo: `Lectura: ${R.titulo}`, desc: listenFirst ? "Texto nuevo en modo escucha: primero escuchalo sin leer, luego leelo y responde." : "Texto nuevo: lee con audio, toca palabras para traducir y responde.", xp: 25, readingWeek: week, readingDw: dw, listenFirst});
     m.push({id: "writing", ic: "/", titulo: `Escritura (min. ${minWords} palabras)`, desc: dw === 6 || dw === 3 ? W.escritura.consigna : dailyWritingPrompt(day), xp: 30, minWords});
   } else {
-    m.push({id: "exam", ic: "", titulo: isCheckpoint ? `CHECKPOINT MENSUAL (semanas 1-${week})` : `Examen semana ${week}`, desc: `Vocabulario + gramatica + dictado. Aprobar con >=${PASS_EXAM}%.`, xp: isCheckpoint ? 200 : 100, checkpoint: isCheckpoint});
+    m.push({id: "exam", ic: "E", titulo: isCheckpoint ? `CHECKPOINT MENSUAL (semanas 1-${week})` : `Examen semana ${week}`, desc: `Vocabulario + gramatica + dictado. Aprobar con >=${PASS_EXAM}%.`, xp: isCheckpoint ? 200 : 100, checkpoint: isCheckpoint});
     m.push({id: "writing", ic: "/", titulo: `Reflexion semanal (min. ${Math.round(W.escritura.min * 0.5)} palabras)`, desc: "En ingles: que aprendiste esta semana?, que fue dificil?, que haras mejor la proxima?", xp: 30, minWords: Math.round(W.escritura.min * 0.5)});
   }
   const vd = videoOfDay(week, dw);
-  m.push({id: "immersion", ic: "", titulo: `Inmersion real (${isExam ? immMin + 15 : immMin} min)`, desc: vd ? `${vd.rewatch ? "Vuelve a ver" : "Clase del dia"}: ${vd.v.t} (${vd.v.min} min).` : (dw === 1 || isExam ? W.inmersion : dailyImmersion(day, ph.n)), xp: 20, minutes: isExam ? immMin + 15 : immMin});
+  m.push({id: "immersion", ic: "I", titulo: `Inmersion real (${isExam ? immMin + 15 : immMin} min)`, desc: vd ? `${vd.rewatch ? "Vuelve a ver" : "Clase del dia"}: ${vd.v.t} (${vd.v.min} min).` : (dw === 1 || isExam ? W.inmersion : dailyImmersion(day, ph.n)), xp: 20, minutes: isExam ? immMin + 15 : immMin});
   return {day, week, dw, isExam, isCheckpoint, W, ph, missions: m};
 }
 
