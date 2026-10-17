@@ -37,7 +37,7 @@ VIEWS.hoy = () => {
     <h2>Esta semana</h2>
     <div class="grid g3">
       <div class="card"><h3>Gramatica</h3><div class="mute">${esc(GRAMMAR[plan.week].titulo)}</div><button class="btn small" style="margin-top:8px" id="seeG">Ver leccion</button></div>
-      <div class="card"><h3>Lectura</h3><div class="mute">${esc(plan.W.lectura.titulo)}</div></div>
+      <div class="card"><h3>Lectura</h3><div class="mute">${esc(readingFor(plan.week, plan.dw).titulo)}</div></div>
       <div class="card"><h3>Meta de la fase</h3><div class="mute" style="font-size:13px">${esc(plan.ph.meta)}</div></div>
     </div></div>`;
   bindMissions(day);

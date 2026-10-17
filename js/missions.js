@@ -251,7 +251,7 @@ const MISSIONS = {
     const today = wordsForDay(day).map(e => e.ex).filter(Boolean);
     const prev = Object.keys(S.cards).map(id => CONTENT.byId[id]?.ex).filter(Boolean);
     let sents = sample(today, 5, rand); sents.push(...sample(prev.filter(s => !sents.includes(s)), 8 - sents.length, rand));
-    if (sents.length < 8) sents.push(...sample(splitSentences(WEEKS[weekOf(day)].lectura.texto).filter(s => s.split(" ").length < 16), 8 - sents.length, rand));
+    if (sents.length < 8) sents.push(...sample(splitSentences(readingFor(weekOf(day), dowOf(day)).texto).filter(s => s.split(" ").length < 16), 8 - sents.length, rand));
     runItems(sents.map(s => ({t: "dict", s})), {title: "Dictado", onBack: back,
       onAnswer: (it, ok, x) => { S.stats.dictTotal++; S.stats.dictOk += (x.score || 0) / 100; },
       onFinish: score => { completeMission(day, "listening", {score}); finishScreen(`Dictado: ${score}%`, `<p>${score >= 85 ? "Excelente oido!" : "Repite manana las frases dificiles con el boton ."}</p>`, back); }});
@@ -260,13 +260,13 @@ const MISSIONS = {
   speaking(day) {
     const back = backToDay(day), rand = rng(day * 11), week = weekOf(day);
     const ex = sample(wordsForDay(day).map(e => e.ex).filter(Boolean), 3, rand);
-    const rd = sample(splitSentences(WEEKS[week].lectura.texto).filter(s => s.split(" ").length <= 18), 3, rand);
+    const rd = sample(splitSentences(readingFor(week, dowOf(day)).texto).filter(s => s.split(" ").length <= 18), 3, rand);
     runSpeaking([...ex, ...rd], back, avg => { completeMission(day, "speaking", {score: avg}); finishScreen(`Pronunciacion: ${avg}%`, `<p class="mute">Consejo: imita el ritmo y la entonacion, no solo los sonidos. Las palabras importantes se acentuan; las pequenas (a, the, to, of) se reducen.</p>`, back); });
   },
 
   reading(day) {
     const plan = dayPlan(day), m = plan.missions.find(x => x.id === "reading"), back = backToDay(day);
-    runReading(m.readingWeek, m.readingWeek !== plan.week, back, score => { completeMission(day, "reading", {score}); finishScreen(`Comprension: ${score}%`, `<p>Lectura completada.</p>`, back); });
+    runReading(m.readingWeek, m.readingDw, m.listenFirst, back, score => { completeMission(day, "reading", {score}); finishScreen(`Comprension: ${score}%`, `<p>Lectura completada.</p>`, back); });
   },
 
   writing(day) { runWriting(day); },
@@ -339,8 +339,8 @@ function runSpeaking(sents, onBack, onDone) {
 }
 
 // ---------- Lectura ----------
-function runReading(week, listenFirst, onBack, onDone) {
-  const L = WEEKS[week].lectura; KEY = null;
+function runReading(week, dw, listenFirst, onBack, onDone) {
+  const L = readingFor(week, dw); KEY = null;
   const sents = splitSentences(L.texto);
   let idx = 0, playing = false;
   const textHTML = () => {
@@ -382,7 +382,7 @@ function runReading(week, listenFirst, onBack, onDone) {
   };
   $("#qs").onclick = () => {
     playing = false; stopSpeech(); if (gl) gl.remove();
-    runItems(L.preguntas.map(q => ({t: "mc", q: q.q, o: q.o, a: q.a})), {title: "Comprension lectora", onBack: () => runReading(week, false, onBack, onDone), onFinish: score => onDone(score)});
+    runItems(L.preguntas.map(q => ({t: "mc", q: q.q, o: q.o, a: q.a})), {title: "Comprension lectora", onBack: () => runReading(week, dw, false, onBack, onDone), onFinish: score => onDone(score)});
   };
 }
 

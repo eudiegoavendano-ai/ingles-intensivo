@@ -111,6 +111,18 @@ function lookupWord(raw) {
 }
 
 function weekOf(day) { return Math.ceil(day / 7); }
+// Lectura del dia: dia 1 = lectura principal de la semana; dias 2 a 6 = lecturas extra (data/lecturas_*.js)
+function readingFor(week, dw) {
+  const r = dw >= 2 && dw <= 6 ? ((window.LECTURAS || {})[week] || [])[dw - 2] : null;
+  if (!r) return WEEKS[week].lectura;
+  const rand = rng(week * 1000 + dw * 37);
+  return {titulo: r.t, texto: r.x, preguntas: r.q.map(([q, o, a], j) => {
+    const opts = o.split("|");
+    if (opts.length === 2 && /^(yes|no)( |,|$)/i.test(opts[0])) return {q, o: opts, a};
+    const order = shuffle(opts.map((_, i) => i), rand); // mezcla las opciones para que la correcta no sea siempre la misma
+    return {q, o: order.map(i => opts[i]), a: order.indexOf(a)};
+  })};
+}
 function dowOf(day) { return ((day - 1) % 7) + 1; }
 function phaseOf(week) { return FASES.find(f => week >= f.semanas[0] && week <= f.semanas[1]); }
 function wordsForDay(day) {
@@ -141,8 +153,8 @@ function dayPlan(day) {
     m.push({id: "grammar", ic: "S", titulo: dw === 1 ? `Leccion: ${GRAMMAR[week].titulo}` : `Practica: ${GRAMMAR[week].titulo}`, desc: dw === 1 ? "Lee la leccion y haz los ejercicios (>=70%)." : "Ejercicios de la unidad + repaso de unidades anteriores (>=70%).", xp: 30});
     m.push({id: "listening", ic: "", titulo: "Dictado", desc: "Escucha 8 frases y escribelas exactamente.", xp: 25});
     m.push({id: "speaking", ic: "", titulo: "Pronunciacion y shadowing", desc: "Escucha, repite en voz alta y mide tu pronunciacion.", xp: 25});
-    const rw = (dw % 2 === 1) ? week : Math.max(1, week - Math.ceil(dw / 2));
-    m.push({id: "reading", ic: "", titulo: rw === week ? `Lectura: ${WEEKS[week].lectura.titulo}` : `Relectura: ${WEEKS[rw].lectura.titulo}`, desc: rw === week ? "Lee con audio, toca palabras para traducir y responde." : "Repaso de una lectura anterior: escucha primero sin leer.", xp: 25, readingWeek: rw});
+    const R = readingFor(week, dw), listenFirst = dw === 4 || dw === 6;
+    m.push({id: "reading", ic: "", titulo: `Lectura: ${R.titulo}`, desc: listenFirst ? "Texto nuevo en modo escucha: primero escuchalo sin leer, luego leelo y responde." : "Texto nuevo: lee con audio, toca palabras para traducir y responde.", xp: 25, readingWeek: week, readingDw: dw, listenFirst});
     m.push({id: "writing", ic: "/", titulo: `Escritura (min. ${minWords} palabras)`, desc: dw === 6 || dw === 3 ? W.escritura.consigna : dailyWritingPrompt(day), xp: 30, minWords});
   } else {
     m.push({id: "exam", ic: "", titulo: isCheckpoint ? `CHECKPOINT MENSUAL (semanas 1-${week})` : `Examen semana ${week}`, desc: `Vocabulario + gramatica + dictado. Aprobar con >=${PASS_EXAM}%.`, xp: isCheckpoint ? 200 : 100, checkpoint: isCheckpoint});
