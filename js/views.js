@@ -87,12 +87,13 @@ VIEWS.plan = () => {
 };
 
 VIEWS.gramatica = () => {
-  main().innerHTML = `<div class="wrap"><h1>Biblioteca de gramatica</h1><p class="sub">Las 26 unidades del plan. Puedes leer cualquiera y practicarla cuando quieras (practica libre).</p>
-    <div class="grid g2">${Array.from({length: 26}, (_, k) => k + 1).map(w => `<div class="card" style="cursor:pointer" data-w="${w}"><span class="pill ${w <= 8 ? "g" : w <= 18 ? "b" : "p"}">Unidad ${w}</span><h3 style="margin-top:8px">${esc(GRAMMAR[w].titulo)}</h3><div class="mute" style="font-size:13px">Semana ${w} - ${GRAMMAR[w].ejercicios.length} ejercicios</div></div>`).join("")}</div></div>`;
+  main().innerHTML = `<div class="wrap"><h1>Biblioteca de gramatica</h1><p class="sub">Las 26 unidades del plan. Puedes leer cualquiera y practicarla cuando quieras: cada vez salen 10 ejercicios distintos al azar.</p>
+    <div class="grid g2">${Array.from({length: 26}, (_, k) => k + 1).map(w => `<div class="card" style="cursor:pointer" data-w="${w}"><span class="pill ${w <= 8 ? "g" : w <= 18 ? "b" : "p"}">Unidad ${w}</span><h3 style="margin-top:8px">${esc(GRAMMAR[w].titulo)}</h3><div class="mute" style="font-size:13px">Semana ${w} - ${GRAMMAR[w].ejercicios.length + extraBank(w).length} ejercicios</div></div>`).join("")}</div></div>`;
   $$("[data-w]").forEach(c => c.onclick = () => {
     const w = +c.dataset.w;
-    lessonView(w, () => go("gramatica"), () => runItems(grammarItems(w, 10, Math.random), {title: "Practica libre - U" + w, onBack: () => go("gramatica"),
-      onAnswer: (it, ok) => { S.stats.gramTotal++; if (ok) S.stats.gramOk++; }, onFinish: s => { addXP(5); save(); finishScreen(`${s}%`, "<p>Practica libre terminada.</p>", () => go("gramatica")); }}), "Practicar 10 ejercicios");
+    const free = () => runItems(sample(unitAll(w, Math.random), 10, Math.random), {title: "Practica libre - U" + w, onBack: () => go("gramatica"),
+      onAnswer: (it, ok) => { S.stats.gramTotal++; if (ok) S.stats.gramOk++; }, onFinish: s => { addXP(5); save(); finishScreen(`${s}%`, `<p>Practica libre terminada.</p><button class="btn" id="moreP" style="margin-top:10px">Practicar 10 mas</button>`, () => go("gramatica")); const b = $("#moreP"); if (b) b.onclick = free; }});
+    lessonView(w, () => go("gramatica"), free, "Practicar 10 ejercicios al azar");
   });
 };
 

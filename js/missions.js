@@ -134,11 +134,26 @@ function extraItem(e, rand) {
 }
 // Dias de practica (2 a 6): 6 ejercicios nuevos distintos cada dia + 2 de la leccion + 2 de repaso de unidades anteriores.
 // Si repite el intento, los 6 nuevos se sacan al azar del banco completo.
+// Banco extra de una unidad sin repetidos (GRAMMAR_EXTRA trae ~120 por unidad)
+const _bankCache = {};
+function extraBank(week) {
+  if (_bankCache[week]) return _bankCache[week];
+  const seen = new Set(GRAMMAR[week].ejercicios.map(x => x.t + "|" + (x.q || x.a)));
+  const tmap = {m: "mc", f: "fill", o: "order", t: "tr"};
+  return (_bankCache[week] = ((window.GRAMMAR_EXTRA || {})[week] || []).filter(e => {
+    const k = tmap[e[0]] + "|" + (e[0] === "m" && e[1].startsWith("Elige") ? e[1] + e[2] : e[1]);
+    if (seen.has(k)) return false; seen.add(k); return true;
+  }));
+}
+// Todos los ejercicios de una unidad (leccion + banco extra), listos para runItems
+function unitAll(week, rand) {
+  return [...GRAMMAR[week].ejercicios.map(x => ({...x})), ...extraBank(week).map(e => extraItem(e, rand))].map(x => ({...x, label: "Unidad " + week}));
+}
 function practiceItems(week, dw, rand, tries) {
-  const bank = (window.GRAMMAR_EXTRA || {})[week] || [];
+  const bank = extraBank(week);
   if (!bank.length) return grammarItems(week, 8, rand, 2);
   const fixed = shuffle(bank, rng(week * 991)); // mismo orden siempre: cada dia toma su parte sin repetir
-  const per = Math.ceil(bank.length / 5);
+  const per = 8;
   const picked = tries ? sample(bank, per, rand) : fixed.slice((dw - 2) * per, (dw - 1) * per);
   const items = picked.map(e => ({...extraItem(e, rand), label: "Unidad " + week}));
   items.push(...grammarItems(week, 2, rand, 2));
