@@ -21,10 +21,42 @@ function rng(seed) { // mulberry32
 function shuffle(arr, rand = Math.random) { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 function sample(arr, n, rand = Math.random) { return shuffle(arr, rand).slice(0, n); }
 
-// Normalizacion para comparar respuestas en ingles
+// Numeros a palabras: el reconocedor de voz (y a veces el usuario) escribe "7:00", "10", "$15", "21st", "1995"
+const NUM_A = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen"];
+const NUM_T = ["", "", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"];
+function numToWords(n) {
+  if (n < 20) return NUM_A[n];
+  if (n < 100) return NUM_T[Math.floor(n / 10)] + (n % 10 ? " " + NUM_A[n % 10] : "");
+  if (n < 1000) return NUM_A[Math.floor(n / 100)] + " hundred" + (n % 100 ? " and " + numToWords(n % 100) : "");
+  if (n < 1000000) return numToWords(Math.floor(n / 1000)) + " thousand" + (n % 1000 ? (n % 1000 < 100 ? " and " : " ") + numToWords(n % 1000) : "");
+  return String(n);
+}
+const ORD_A = {one: "first", two: "second", three: "third", five: "fifth", eight: "eighth", nine: "ninth", twelve: "twelfth"};
+function ordToWords(n) {
+  const w = numToWords(n).split(" "), last = w.pop();
+  const o = ORD_A[last] || (last.endsWith("y") ? last.slice(0, -1) + "ieth" : last + "th");
+  return [...w, o].join(" ");
+}
+function yearToWords(y) {
+  if (y >= 2000 && y < 2010) return "two thousand and " + numToWords(y - 2000);
+  const lo = y % 100;
+  return numToWords(Math.floor(y / 100)) + " " + (lo === 0 ? "hundred" : lo < 10 ? "oh " + numToWords(lo) : numToWords(lo));
+}
+function spellNumbers(s) {
+  return s
+    .replace(/\$\s?(\d+)(?:\.\d{2})?/g, (m, d) => d + " dollars")
+    .replace(/(\d+)\s?%/g, "$1 percent")
+    .replace(/(\d)[,.](\d{3})(?!\d)/g, "$1$2")
+    .replace(/(^|[^\d])(\d{1,2}):(\d{2})(?!\d)/g, (m, p, h, mm) => p + numToWords(+h) + (mm === "00" ? "" : " " + (+mm < 10 ? "oh " + numToWords(+mm) : numToWords(+mm))))
+    .replace(/(\d+)(st|nd|rd|th)(?![a-z])/g, (m, n) => ordToWords(+n))
+    .replace(/(^|[^\d])(1[5-9]\d\d|20\d\d)(?!\d)/g, (m, p, y) => p + yearToWords(+y))
+    .replace(/\d+/g, n => numToWords(+n))
+    .replace(/(^|\s)(a\.?m\.?|p\.?m\.?)(?=\s|$)/g, " ")
+    .replace(/(^|\s)o'?clock(?=[\s.,!?]|$)/g, " ");
+}
+// Normalizacion para comparar respuestas en ingles (los numeros se pasan a palabras primero)
 function normalize(s) {
-  return String(s).toLowerCase()
-    .replace(/[\u2019\u2018`\u00b4]/g, "'")
+  return spellNumbers(String(s).toLowerCase().replace(/[\u2019\u2018`\u00b4]/g, "'"))
     .replace(/won't/g, "will not").replace(/can't/g, "can not").replace(/cannot/g, "can not")
     .replace(/shan't/g, "shall not").replace(/n't\b/g, " not")
     .replace(/'m\b/g, " am").replace(/'re\b/g, " are").replace(/'ve\b/g, " have")

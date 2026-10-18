@@ -78,7 +78,7 @@ function numberSentences(week) {
     () => `We have ${numWords(int(2, 20))} students in the class.`,
     () => `The meeting is on ${pick(days)} at ${timeWords(int(8, 11), pick([0, 15, 30]))}.`,
     () => `I was born in ${yearWords(int(1960, 2009))}.`,
-    () => `Her birthday is on ${pick(months)} the ${["first", "second", "third", "fifth", "tenth", "twelfth", "fifteenth", "twentieth", "twenty-first", "thirtieth"][int(0, 9)]}.`,
+    () => `Her birthday is on the ${["first", "second", "third", "fifth", "tenth", "twelfth", "fifteenth", "twentieth", "twenty-first", "thirtieth"][int(0, 9)]} of ${pick(months)}.`,
     () => `The museum opens at ${timeWords(int(8, 10), pick([0, 30]))} and closes at ${timeWords(int(5, 7), 0)}.`,
     () => `It is ${numWords(int(1, 35))} degrees today.`,
     () => `The flight takes ${numWords(int(2, 14))} hours.`,
