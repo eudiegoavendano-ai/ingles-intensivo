@@ -433,7 +433,8 @@ function runWriting(day) {
       ${["Cada oracion tiene sujeto (I, it, she...)", "Use la -s en he/she/it en presente", "Los adjetivos van antes del sustantivo", "Revise los tiempos verbales (pasado, presente perfecto...)", "Use conectores (and, but, because, however...)", "Use al menos 5 palabras nuevas de esta semana"].map((c, k) => `<label style="display:block;margin:4px 0"><input type="checkbox" class="ck"> ${c}</label>`).join("")}
     </div>
     <div class="row" style="margin-top:16px"><button class="btn" id="cp"> Copiar prompt para que Claude me corrija</button><div class="spacer"></div><button class="btn primary" id="fin" disabled>Guardar y completar</button></div>
-    <p class="mute" style="font-size:12px">Truco agresivo: pega el prompt en Claude, estudia cada correccion y reescribe aqui la version corregida antes de completar.</p></div>`;
+    <div id="clHolder" style="margin-top:12px"></div>
+    <p class="mute" style="font-size:12px">Truco agresivo: corrige con Claude, estudia cada correccion y reescribe aqui la version corregida antes de completar.</p></div>`;
   bindBack(back);
   const wt = $("#wt");
   // Requisitos del revisor segun el tipo de consigna
@@ -465,6 +466,7 @@ function runWriting(day) {
     clearTimeout(timer); timer = setTimeout(review, 250);
   };
   wt.oninput = () => { upd(); save(); }; $$(".ck").forEach(c => c.onchange = review); upd(); review(); wt.focus();
+  if (typeof attachClaudeButton === "function") attachClaudeButton(day, () => wt.value, $("#clHolder"));
   $("#cp").onclick = () => {
     const p = `Actua como mi profesor de ingles personal. Mi nivel actual es ${cefrFor(day)} y estoy en el dia ${day} de un plan intensivo de 6 meses. Esta semana estudio: "${GRAMMAR[plan.week].titulo}".\n\nConsigna: ${m.desc}\n\nMi texto:\n"""\n${wt.value}\n"""\n\nPor favor:\n1. Devuelveme el texto corregido completo.\n2. Haz una tabla con cada error: original -> correccion -> explicacion breve en espanol.\n3. Dime los 3 errores mas importantes que debo dejar de cometer.\n4. Reescribe 2 de mis frases como las diria un nativo.\n5. Ponle una nota del 1 al 10 y dime que haria que mi texto suba de nivel.`;
     const fallback = () => {
