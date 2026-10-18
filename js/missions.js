@@ -427,7 +427,8 @@ function runWriting(day) {
     <div class="row mute" style="font-size:13px">Gramatica a usar: <b style="color:var(--text)">${esc(GRAMMAR[plan.week].titulo)}</b></div>
     ${todayWords.length ? `<div class="row" style="margin:8px 0;font-size:13px" id="wl">${todayWords.map(e => `<span class="pill" data-w="${esc(e.en.toLowerCase())}">${esc(e.en)}</span>`).join("")}</div>` : ""}
     <textarea class="txt" id="wt" spellcheck="true" lang="en" placeholder="Write here in English...">${esc(J.text || "")}</textarea>
-    <div class="row" style="margin-top:10px"><b id="wc">0</b><span class="mute">/ ${m.minWords} palabras</span><div class="bar" style="flex:1"><div id="wb"></div></div></div>
+    <div class="row" style="margin-top:10px"><b id="wc">0</b><span class="mute">/ ${m.minWords} palabras validas</span><div class="bar" style="flex:1"><div id="wb"></div></div></div>
+    <div class="card" style="margin-top:14px"><h3>Revisor automatico</h3><p class="mute" style="font-size:13px">Solo cuentan oraciones reales en ingles: con sujeto y verbo, de ${plan.week <= 8 ? 4 : plan.week <= 18 ? 5 : 6}+ palabras, sin repetir ni copiar ejemplos. Para completar debes cumplir todo.</p><div id="wfb"></div></div>
     <div class="card" style="margin-top:14px"><h3>Checklist de autocorreccion</h3>
       ${["Cada oracion tiene sujeto (I, it, she...)", "Use la -s en he/she/it en presente", "Los adjetivos van antes del sustantivo", "Revise los tiempos verbales (pasado, presente perfecto...)", "Use conectores (and, but, because, however...)", "Use al menos 5 palabras nuevas de esta semana"].map((c, k) => `<label style="display:block;margin:4px 0"><input type="checkbox" class="ck"> ${c}</label>`).join("")}
     </div>
@@ -435,15 +436,35 @@ function runWriting(day) {
     <p class="mute" style="font-size:12px">Truco agresivo: pega el prompt en Claude, estudia cada correccion y reescribe aqui la version corregida antes de completar.</p></div>`;
   bindBack(back);
   const wt = $("#wt");
+  // Requisitos del revisor segun el tipo de consigna
+  const reflection = plan.dw === 7;
+  const vocab = (reflection ? CONTENT.byWeek[plan.week] : todayWords).map(e => e.en.replace(/\(.*?\)/g, "").split("/")[0].trim().toLowerCase()).filter(Boolean);
+  const copied = new Set([...CONTENT.byWeek[plan.week].map(e => normalize(e.ex || "")), ...splitSentences(readingFor(plan.week, Math.min(6, plan.dw)).texto).map(normalize)]);
+  const ctx = {week: plan.week, minWords: m.minWords, vocab, copied,
+    minSent: /8 frases/.test(m.desc) ? 8 : Math.min(8, Math.max(3, Math.ceil(m.minWords / 15))),
+    minVocab: Math.min(/5 palabras/.test(m.desc) ? 5 : 3, vocab.length),
+    minGram: reflection ? 1 : 2};
+  let timer = null;
+  const review = () => {
+    const an = analyzeWriting(wt.value, ctx);
+    const vw = an.sentences.filter(x => x.ok).reduce((a, x) => a + x.n, 0);
+    $("#wc").textContent = vw; $("#wb").style.width = Math.min(100, 100 * vw / m.minWords) + "%";
+    const bad = an.sentences.filter(x => !x.ok);
+    $("#wfb").innerHTML = an.checks.map(c => `<div style="margin:4px 0;color:${c.ok ? "var(--accent)" : "var(--red)"}">${c.ok ? "OK" : "X"} - ${esc(c.label)}</div>`).join("") +
+      (an.errs.length ? `<div class="note" style="margin-top:10px">${an.errs.map(e => `<div><b>"${esc(e.found)}"</b>: ${esc(e.msg)}</div>`).join("")}</div>` : "") +
+      (bad.length ? `<div style="margin-top:10px;font-size:13px"><b>Oraciones que no cuentan:</b>${bad.slice(0, 8).map(x => `<div class="mute">- "${esc(x.s.slice(0, 70))}" -> ${esc(x.reason)}</div>`).join("")}</div>` : "");
+    const checked = $$(".ck").every(c => c.checked);
+    $("#fin").disabled = !(an.ok && checked);
+    $("#fin").textContent = an.ok && !checked ? "Marca el checklist para completar" : "Guardar y completar";
+    $$("#wl .pill").forEach(p => p.classList.toggle("g", an.usedVocab.includes(p.dataset.w.replace(/\(.*?\)/g, "").split("/")[0].trim())));
+    return {an, vw};
+  };
   const upd = () => {
     const n = (wt.value.match(/[A-Za-z']+/g) || []).length;
-    $("#wc").textContent = n; $("#wb").style.width = Math.min(100, 100 * n / m.minWords) + "%";
-    $("#fin").disabled = n < m.minWords;
-    const low = " " + normalize(wt.value) + " ";
-    $$("#wl .pill").forEach(p => p.classList.toggle("g", low.includes(" " + normalize(p.dataset.w) + " ")));
     S.journal[day] = {text: wt.value, words: n, date: todayISO(), prompt: m.desc};
+    clearTimeout(timer); timer = setTimeout(review, 250);
   };
-  wt.oninput = () => { upd(); save(); }; upd(); wt.focus();
+  wt.oninput = () => { upd(); save(); }; $$(".ck").forEach(c => c.onchange = review); upd(); review(); wt.focus();
   $("#cp").onclick = () => {
     const p = `Actua como mi profesor de ingles personal. Mi nivel actual es ${cefrFor(day)} y estoy en el dia ${day} de un plan intensivo de 6 meses. Esta semana estudio: "${GRAMMAR[plan.week].titulo}".\n\nConsigna: ${m.desc}\n\nMi texto:\n"""\n${wt.value}\n"""\n\nPor favor:\n1. Devuelveme el texto corregido completo.\n2. Haz una tabla con cada error: original -> correccion -> explicacion breve en espanol.\n3. Dime los 3 errores mas importantes que debo dejar de cometer.\n4. Reescribe 2 de mis frases como las diria un nativo.\n5. Ponle una nota del 1 al 10 y dime que haria que mi texto suba de nivel.`;
     const fallback = () => {
@@ -453,7 +474,7 @@ function runWriting(day) {
     };
     try { navigator.clipboard.writeText(p).then(() => toast("Prompt copiado. Pegalo en Claude."), fallback); } catch (e) { fallback(); }
   };
-  $("#fin").onclick = () => { upd(); completeMission(day, "writing", {words: S.journal[day].words}); finishScreen("Texto guardado OK", `<p>${S.journal[day].words} palabras escritas. Lo encuentras en \"Mi diario\".</p>`, back); };
+  $("#fin").onclick = () => { const r = review(); if (!r.an.ok) return toast("Aun faltan requisitos del revisor"); upd(); completeMission(day, "writing", {words: r.vw}); finishScreen("Texto guardado OK", `<p>${r.vw} palabras validas escritas. Lo encuentras en \"Mi diario\".</p>`, back); };
 }
 
 // ---------- Inmersion ----------
